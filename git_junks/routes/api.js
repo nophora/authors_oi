@@ -98,19 +98,6 @@ router.post('/photos', upload.single('file'), async (req, res, next) => {
       });
 
 
-/*
-    const file = await cloudinary.v2.uploader.upload(req.file.path)
-
-    const filePath = { path: `${file.secure_url}` }
-
-
-    if (file === null) {
-      
-
-    }
-    else {
-        res.json(filePath);
-    }*/
 })
 
 
@@ -192,12 +179,12 @@ router.get('/videostream/:id', (req, res, error) => {
 //MOVIES ROUTER
 router.get('/movieget', (req, res) => {
     movie.find({}).then(commenter => {
-      
-        res.json(commenter)
+        res.status(200).json(commenter)
     }).catch(error => {
         if (error) {
-          
-        }
+          res.status(500).json({
+              erros:'file not sent'
+        })
     })
 
 })
@@ -205,16 +192,15 @@ router.get('/movieget', (req, res) => {
 router.post('/moviepost', (req, res, next) => {
     const data = req.body;
     const newMovies = new movie(data);
-
-   
-
+ 
     newMovies.save((error) => {
         if (error) {
-        
+         res.status(500).json({
+              erros:'file not sent'
+        })
         }
         else {
-          
-            res.json('movie added')
+            res.status(200).json('movie added')
         }
     });
 
@@ -226,9 +212,11 @@ router.put('/movieput/:id', (req, res, next) => {
    
     movie.findByIdAndUpdate({ _id: req.params.id }, req.body).then(() => {
         movie.findOne({ _id: req.params.id }).then(movie => {
-            res.json(movie)
+            res.status(200).json(movie)
           
-        }).catch(next, () => { console.log('if not send') })
+        }).catch(next, (error) => { res.status(500).json('file not sent',{
+              erros:'file not sent'
+        }) })
 
     })
 })
@@ -238,10 +226,12 @@ router.put('/movieput/:id', (req, res, next) => {
 router.get('/accountget', (req, res) => {
     account.find({}).then(myAccount => {
        
-        res.json(myAccount)
+        res.status(200).json(myAccount)
     }).catch(error => {
         if (error) {
-           
+            res.status(500).json({
+              erros:'file not sent'
+        })
         }
     })
 
@@ -249,15 +239,14 @@ router.get('/accountget', (req, res) => {
 
 
 const myOAuth2Client = new OAuth2(
-    "197031445043-fb9g1erl4uisdthicjhdcvf4pp0m1542.apps.googleusercontent.com",
-    "9aYCyB1nMlJn1MKU4kNjdryo",
+    process.env.GOOGLE_DOC,
+    process.env.TOKEN_FPT,
     "https://developers.google.com/oauthplayground"
     )
 
 
     myOAuth2Client.setCredentials({
-        refresh_token:"1//04XKe3cjv_jjqCgYIARAAGAQSNwF-L9IrWWjL0kUs4dNf2YOwQ2n6uMh9xc6thM2jfWqWDX1IHrr7BwhOhokEcdnV3n7zZGTxRjo"
-    });
+        refresh_token:process.env.REFRESH_TOKEN });
         
 
 router.post('/accountpost', (req, res, next) => {
@@ -269,10 +258,10 @@ router.post('/accountpost', (req, res, next) => {
         auth: {
             type: "OAuth2",
             user: process.env.EMAIL, 
-            clientId:"197031445043-fb9g1erl4uisdthicjhdcvf4pp0m1542.apps.googleusercontent.com",
-            clientSecret: "9aYCyB1nMlJn1MKU4kNjdryo",
-            refreshToken: "1//04XKe3cjv_jjqCgYIARAAGAQSNwF-L9IrWWjL0kUs4dNf2YOwQ2n6uMh9xc6thM2jfWqWDX1IHrr7BwhOhokEcdnV3n7zZGTxRjo",
-            accessToken: myOAuth2Client 
+            clientId:process.env.CLIENT_ID,
+            clientSecret:process.env.CLIENT_SECRET,
+            accessToken:process.env.ACCESS_TOKEN 
+            myOAuth2Client:process.env.OAUTH_2_CLIENT
         }
     })
 
@@ -294,37 +283,38 @@ router.post('/accountpost', (req, res, next) => {
 
     const { email } = data
 
-    console.log(email)
-
     let mailOptons = {
         from: process.env.EMAIL,
         to: email,
         subject: 'Cloudfoud Rest-Api',
-        text: 'you QR CODE Adress was successfully made, now you can enjoy unlimited pull-request',
+        text: 'You QR CODE Adress was successfully made, now you can enjoy unlimited pull-request',
          template: 'index'
 
     }
 
-    transporter.sendMail(mailOptons, (err, data) => {
+    transporter.sendMail(mailOptons, (err, data,mail_sent) => {
         if (err) {
-            err
+             res.status(500).json({
+              erros:'Ooops something went wrong on Mail'
+              })
         } else {
-            console.log('email sent!')
-        }
+            res.status(200).json(mail_sent) 
+           }
     })
 
 
 
-    /*  const newAccount = new account(data);
-      console.log('ACCOUNT', data)
+      const newAccount = new account(data);
       newAccount.save((error) => {
           if (error) {
-              console.log('Ooops something went wrong on account');
+              res.status(500).json({
+              erros:'Ooops something went wrong on account'
+              })
           }
           else {
-              console.log('data has been save on account');
+            res.status(200).json(newAccount)  
           }
-      });*/
+      });
 
 })
 
@@ -332,10 +322,12 @@ router.put('/accountput/:id', (req, res, next) => {
    
     account.findByIdAndUpdate({ _id: req.params.id }, req.body).then(() => {
         account.findOne({ _id: req.params.id }).then(myAccount => {
-            res.json(myAccount)
+            res.status(200).json(myAccount)
           
         }).catch(next, () => {})
-
+ res.status(500).json({
+              erros:'Ooops something went wrong on Acount Post'
+              })
     })
 })
 
@@ -343,10 +335,12 @@ router.put('/accountput/:id', (req, res, next) => {
 router.get('/slideget', (req, res) => {
     slide.find({}).then(mySlide => {
        
-        res.json(mySlide)
+        res.status(200).json(mySlide)
     }).catch(error => {
         if (error) {
-          
+          res.status(500).json({
+              erros:'Ooops something went wrong on slidesget post'
+              })
         }
     })
 
@@ -356,9 +350,16 @@ router.put('/slideput/:id', (req, res, next) => {
     
     slide.findByIdAndUpdate({ _id: req.params.id }, req.body).then(() => {
         slide.findOne({ _id: req.params.id }).then(mySlide => {
-            res.json(mySlide)
+            res.status(200).json(mySlide)
            
-        }).catch(next, () => {  })
+        }).catch((error) => 
+               
+          res.status(500).json({
+              erros:'Ooops something went wrong on update ID',
+              error,
+              
+        })
+        )
 
     })
 })
@@ -370,10 +371,12 @@ router.post('/slidepost', (req, res, next) => {
     
     newSlide.save((error) => {
         if (error) {
-          
+          res.status(500).json({
+              erros:'Ooops something went wrong on newSlide post'
+              })
         }
         else {
-           
+            res.status(200).json(newSlide)
         }
     })
 
