@@ -60,7 +60,7 @@ class Api extends Component {
         const div2 = document.querySelector('.watvb2 ')
 
         const chosse = div || div2
-
+        const stable = swipe_middle
         var xDown = null
         var yDown = null
 
